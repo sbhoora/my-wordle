@@ -1,58 +1,54 @@
-import { useState } from 'react'
-
-function Guess() {
-    return (
-        // updated row for guess when ENTER is pressed
-        <></>
-    )
-}
+import { useState, useEffect } from 'react';
 
 function Wordle() {
-    const [guessCount, setGuessCount] = useState(0)
-    const [value, setValue] = useState('');
-    const [pointer, setPointer] = useState([guessCount, 0]); // [row, column]
-    const [status, setStatus] = useState('play');
+    // keep track of correctly placed, misplaced, and incorrect letters
+    const [letters, setLetters] = useState(Array(36).fill(''));
+    const [guessCount, setGuessCount] = useState(0);
+    const secretWord = 'SHUBHI';
 
-    function handleKeyDown(e) {
-        console.log(`(Code: ${e.code})`);        
-        const newValue = e.target.value;
-        if (/^[a-zA-Z]*$/.test(newValue)) {
-            setValue(newValue.toUpperCase());
-        }
-        if (e.code === 'Enter') {
-            console.log(`Guess: ${guessCount+1}`);        
-            setGuessCount(guessCount + 1);
-            if (value === 'SECRET') {
-                setStatus('win');
-            } 
-            else if (guessCount >= 6) {
-                setStatus('lose');
+    useEffect(() => {
+        function handleKeyDown(e) {
+            if (e.key === 'Enter') {
+                const currentGuess = letters.slice(guessCount * 6, guessCount * 6 + 6).join('');
+                console.log('Current guess:', currentGuess);
+                if (currentGuess.length === 6) {
+                    if (currentGuess === secretWord) {
+                        console.log('You guessed the word!');
+                    } else {
+                        console.log('Incorrect guess. Try again.');
+                    }
+                    setGuessCount(prev => {
+                        const nextGuess = prev + 1;
+                        return nextGuess;
+                    }); 
+                }
+            } else {
+                setLetters((prevLetters) => {
+                    const newLetters = [...prevLetters];
+                    const index = newLetters.findIndex(item => item === '');
+                    if (e.key === 'Backspace' && index > guessCount * 6 && index <= guessCount * 6 + 6) {
+                        newLetters[index-1] = '';
+                    } else if (index <= guessCount * 6 + 5 && e.key.match(/[a-z]/i)) {
+                        newLetters[index] = e.key.toUpperCase();
+                    }
+                    return newLetters;
+                }); 
             }
-            else if (guessCount < 6) {
-                // Move to the next row, game CONTINUE
-                setPointer([guessCount + 1, 0]); 
-            }
         }
-        else if (e.code === 'Backspace') {
-            // Handle BACKSPACE key press
-        }
-    }
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [guessCount, letters]);
 
     return(
         <>
             <div>Wordle</div>
-            <div className="grid grid-flow-col grid-rows-6 gap-4">
-                {/* when ENTER is pressed, call function that updates each row */}
-                {Array.from({ length: 36 }, (_, index) => (
-                    <div id={`cell-${index}`} key={index}>{index}</div>
+            <div className="grid grid-cols-6 gap-4">
+                {letters.map((letter, index) => (
+                    <div id={`cell-${index}`} key={index}>{letter}</div>
                 ))}
             </div>
-            <input 
-                type="text" 
-                value={value} 
-                onKeyDown={handleKeyDown} 
-                placeholder="Type only letters..." 
-            />
         </>
     )
 }
