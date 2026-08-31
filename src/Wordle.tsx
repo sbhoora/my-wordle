@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 
 function Wordle() {
-    // dictionary api to get random secretWord, and check if guess is a real word
     const [letters, setLetters] = useState(Array(36).fill(''));
     const [guessCount, setGuessCount] = useState(0);
+
+    // dictionary api to get random secretWord, and check if guess is a real word
     const secretWord = 'SHUBHI';
 
     useEffect(() => {
@@ -53,8 +54,8 @@ function Wordle() {
 
     return (
         <>
-            <div className="text-4xl font-bold mb-4 pt-4">Wordle</div>
-            <div className="items-center flex flex-col h-screen">
+            <div className="text-4xl text-sky-400 font-bold mb-4 pt-4">Wordle</div>
+            <div className="items-center flex flex-col">
                 {/* add tile effects when ENTER is pressed and when a letter is typed */}
                 <div className="grid grid-cols-6 gap-x-1 gap-y-3 w-full max-w-sm">
                     {letters.map((letter, index) => (
@@ -64,7 +65,6 @@ function Wordle() {
                     ))}
                 </div>
             </div>
-
         </>
     )
 }
