@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
+import Confetti from 'react-confetti';
+import { useWindowSize } from 'react-use'
 
 function Wordle() {
     const [letters, setLetters] = useState(Array(36).fill(''));
     const [letterStatus, setLetterStatus] = useState(Array(36).fill(0)); // 0 = not guessed, 1 = correct, 2 = misplaced, 3 = incorrect
     const [guessCount, setGuessCount] = useState(0);
+    const [showConfetti, setShowConfetti] = useState(false);
 
     // dictionary api to get random secretWord, and check if guess is a real word
     const secretWord = 'CREATE';
@@ -17,12 +20,12 @@ function Wordle() {
 
                 if (currentGuess.length === 6) {
                     if (currentGuess === secretWord) {
-                        alert('You guessed the word!');
                         setLetterStatus(prev => {
                             const newStatus = [...prev];
                             for (let i = 0; i < 6; i++) newStatus[startIndex + i] = 1;
                             return newStatus;
                         });
+                        setShowConfetti(true);
                         setGuessCount(6);
                         return;
                     } else if (guessCount >= 5) {
@@ -35,7 +38,7 @@ function Wordle() {
 
                         for (let i = 0; i < 6; i++) {
                             if (currentGuess[i] === secretWord[i]) {
-                                rowStatuses[i] = 1; 
+                                rowStatuses[i] = 1;
 
                                 const poolIndex = wordPool.indexOf(currentGuess[i]);
                                 if (poolIndex !== -1) {
@@ -49,7 +52,7 @@ function Wordle() {
 
                             const poolIndex = wordPool.indexOf(currentGuess[i]);
                             if (poolIndex !== -1) {
-                                rowStatuses[i] = 2; 
+                                rowStatuses[i] = 2;
                                 wordPool.splice(poolIndex, 1);
                             }
                         }
@@ -83,6 +86,7 @@ function Wordle() {
         };
     }, [guessCount, letters]); // Dependancy Array to re-run useEffect when guessCount or letters change
 
+    const { width, height } = useWindowSize()
     return (
         <>
             <div className="text-4xl text-sky-400 font-bold mb-4 pt-4">Wordle</div>
@@ -96,6 +100,11 @@ function Wordle() {
                     ))}
                 </div>
             </div>
+            {showConfetti && 
+            <Confetti
+                width={width}
+                height={height}
+            />}
         </>
     )
 }
