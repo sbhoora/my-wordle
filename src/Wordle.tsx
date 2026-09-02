@@ -7,55 +7,61 @@ function Wordle() {
 
     // dictionary api to get random secretWord, and check if guess is a real word
     const secretWord = 'CREATE';
-    const secretWordArr = [...secretWord];
 
     useEffect(() => {
         function handleKeyDown(e) {
             if (e.key === 'Enter') {
-                const currentGuess = letters.slice(guessCount * 6, guessCount * 6 + 6).join('');
+                const startIndex = guessCount * 6;
+                const currentGuess = letters.slice(startIndex, startIndex + 6).join('');
                 console.log('Current guess:', currentGuess);
+
                 if (currentGuess.length === 6) {
                     if (currentGuess === secretWord) {
                         alert('You guessed the word!');
-                        // end game early if the guess is correct
-                        setGuessCount(() => {
-                            const nextGuess = 6;
-                            return nextGuess;
+                        setLetterStatus(prev => {
+                            const newStatus = [...prev];
+                            for (let i = 0; i < 6; i++) newStatus[startIndex + i] = 1;
+                            return newStatus;
                         });
+                        setGuessCount(6);
+                        return;
                     } else if (guessCount >= 5) {
                         alert('Game over. The secret word was: ' + secretWord);
                     } else {
                         console.log('Incorrect guess. Try again.');
-                        // keep track of correctly placed, misplaced, and incorrect letters
-                        secretWordArr.every((val, index) => {
-                            if (val === currentGuess[index]) {
-                                // letter is in the correct position
-                                setLetterStatus(prev => {
-                                    const newStatus = [...prev];
-                                    newStatus[guessCount * 6 + index] = 1;
-                                    return newStatus;
-                                });
-                            } else if (secretWord.includes(currentGuess[index])) {
-                                // letter is in the word but in the wrong position
-                                setLetterStatus(prev => {
-                                    const newStatus = [...prev];
-                                    newStatus[guessCount * 6 + index] = 2;
-                                    return newStatus;
-                                });
-                            } else {
-                                // letter is not in the word
-                                setLetterStatus(prev => {
-                                    const newStatus = [...prev];
-                                    newStatus[guessCount * 6 + index] = 3;
-                                    return newStatus;
-                                });
-                            }
-                        });
 
-                        setGuessCount(prev => {
-                            const nextGuess = prev + 1;
-                            return nextGuess;
+                        const rowStatuses = Array(6).fill(3);
+                        const wordPool = [...secretWord];
+
+                        for (let i = 0; i < 6; i++) {
+                            if (currentGuess[i] === secretWord[i]) {
+                                rowStatuses[i] = 1; 
+
+                                const poolIndex = wordPool.indexOf(currentGuess[i]);
+                                if (poolIndex !== -1) {
+                                    wordPool.splice(poolIndex, 1);
+                                }
+                            }
+                        }
+
+                        for (let i = 0; i < 6; i++) {
+                            if (rowStatuses[i] === 1) continue;
+
+                            const poolIndex = wordPool.indexOf(currentGuess[i]);
+                            if (poolIndex !== -1) {
+                                rowStatuses[i] = 2; 
+                                wordPool.splice(poolIndex, 1);
+                            }
+                        }
+
+                        setLetterStatus(prev => {
+                            const newStatus = [...prev];
+                            for (let i = 0; i < 6; i++) {
+                                newStatus[startIndex + i] = rowStatuses[i];
+                            }
+                            return newStatus;
                         });
+                        setGuessCount(prev => prev + 1);
                     }
                 }
             } else if (guessCount < 6) {
