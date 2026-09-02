@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 
 function Wordle() {
     const [letters, setLetters] = useState(Array(36).fill(''));
+    const [letterStatus, setLetterStatus] = useState(Array(36).fill(0)); // 0 = not guessed, 1 = correct, 2 = misplaced, 3 = incorrect
     const [guessCount, setGuessCount] = useState(0);
 
     // dictionary api to get random secretWord, and check if guess is a real word
-    const secretWord = 'SHUBHI';
+    const secretWord = 'CREATE';
+    const secretWordArr = [...secretWord];
 
     useEffect(() => {
         function handleKeyDown(e) {
@@ -14,19 +16,42 @@ function Wordle() {
                 console.log('Current guess:', currentGuess);
                 if (currentGuess.length === 6) {
                     if (currentGuess === secretWord) {
-                        // end game early if the guess is correct
                         alert('You guessed the word!');
+                        // end game early if the guess is correct
                         setGuessCount(() => {
                             const nextGuess = 6;
                             return nextGuess;
                         });
+                    } else if (guessCount >= 5) {
+                        alert('Game over. The secret word was: ' + secretWord);
                     } else {
-                        if (guessCount >= 5) {
-                            alert('Game over. The secret word was: ' + secretWord);
-                        } else {
-                            console.log('Incorrect guess. Try again.');
-                            // keep track of correctly placed, misplaced, and incorrect letters
-                        }
+                        console.log('Incorrect guess. Try again.');
+                        // keep track of correctly placed, misplaced, and incorrect letters
+                        secretWordArr.every((val, index) => {
+                            if (val === currentGuess[index]) {
+                                // letter is in the correct position
+                                setLetterStatus(prev => {
+                                    const newStatus = [...prev];
+                                    newStatus[guessCount * 6 + index] = 1;
+                                    return newStatus;
+                                });
+                            } else if (secretWord.includes(currentGuess[index])) {
+                                // letter is in the word but in the wrong position
+                                setLetterStatus(prev => {
+                                    const newStatus = [...prev];
+                                    newStatus[guessCount * 6 + index] = 2;
+                                    return newStatus;
+                                });
+                            } else {
+                                // letter is not in the word
+                                setLetterStatus(prev => {
+                                    const newStatus = [...prev];
+                                    newStatus[guessCount * 6 + index] = 3;
+                                    return newStatus;
+                                });
+                            }
+                        });
+
                         setGuessCount(prev => {
                             const nextGuess = prev + 1;
                             return nextGuess;
@@ -59,7 +84,7 @@ function Wordle() {
                 {/* add tile effects when ENTER is pressed and when a letter is typed */}
                 <div className="grid grid-cols-6 gap-x-1 gap-y-3 w-full max-w-sm">
                     {letters.map((letter, index) => (
-                        <div id={`cell-${index}`} key={index} className="h-15 w-15 border-2 border-white/15  bg-white/5 text-white flex items-center justify-center font-bold text-2xl select-none">
+                        <div id={`cell-${index}`} key={index} className={`h-15 w-15 border-2 border-white/15  ${letterStatus[index] === 1 ? 'bg-green-500' : letterStatus[index] === 2 ? 'bg-yellow-500' : letterStatus[index] === 3 ? 'bg-gray-500' : 'bg-white/5'} text-white flex items-center justify-center font-bold text-2xl select-none`}>
                             {letter}
                         </div>
                     ))}
